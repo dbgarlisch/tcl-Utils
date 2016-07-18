@@ -14,6 +14,11 @@ namespace eval ::Debug {
     set verbose_ $onOff
   }
 
+  public proc isVerbose {} {
+    variable verbose_
+    return $verbose_
+  }
+
   public proc verboseDo { script } {
     variable verbose_
     if { $verbose_ } {
@@ -29,6 +34,8 @@ namespace eval ::Debug {
 
   public proc dumpDict { title dict {indent 0} } {
     lassign [split "$title|Key|Value" |] title lbl1 lbl2
+    set align1 [getColAlign lbl1]
+    set align2 [getColAlign lbl2]
     set maxKeyWd [string length $lbl1]
     set maxValWd [string length $lbl2]
     dict for {key val} $dict {
@@ -43,7 +50,7 @@ namespace eval ::Debug {
     }
     set pfx [string repeat "  " $indent]
     set dashes [string repeat "-" [expr {$maxKeyWd > $maxValWd ? $maxKeyWd : $maxValWd}]]
-    set fmt "${pfx}${pfx}| %-${maxKeyWd}.${maxKeyWd}s | %-${maxValWd}.${maxValWd}s |"
+    set fmt "${pfx}${pfx}| %${align1}${maxKeyWd}.${maxKeyWd}s | %${align2}${maxValWd}.${maxValWd}s |"
     puts "${pfx}$title \{"
     puts [format $fmt $lbl1 $lbl2]
     #puts [format $fmt $maxKeyWd $maxValWd]
@@ -55,6 +62,20 @@ namespace eval ::Debug {
       }
     }
     puts "${pfx}\}"
+  }
+
+
+  private proc getColAlign { lblVar {defAlign -} } {
+    upvar $lblVar lbl
+    set ret [string index $lbl 0]
+    if { "$ret" == "-" } {
+      set lbl [string range $lbl 1 end]
+    } elseif { "$ret" == "+" } {
+      set lbl [string range $lbl 1 end]
+    } else {
+      set ret $defAlign
+    }
+    return $ret
   }
 
 
