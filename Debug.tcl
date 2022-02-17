@@ -9,15 +9,18 @@ source [file join [file dirname [info script]] ProcAccess.tcl]
 namespace eval ::Debug {
   variable verbose_ 0
 
+
   public proc setVerbose { {onOff 1} } {
     variable verbose_
     set verbose_ $onOff
   }
 
+
   public proc isVerbose {} {
     variable verbose_
     return $verbose_
   }
+
 
   public proc verboseDo { script } {
     variable verbose_
@@ -26,11 +29,13 @@ namespace eval ::Debug {
     }
   }
 
+
   public proc vputs { msg } {
     verboseDo {
       puts $msg
     }
   }
+
 
   public proc dumpDict { title dict {indent 0} } {
     lassign [split "$title|Key|Value" |] title lbl1 lbl2
@@ -62,6 +67,45 @@ namespace eval ::Debug {
       }
     }
     puts "${pfx}\}"
+  }
+
+
+  public proc callSig { {procName ""} {halfLen 60} } {
+    if { "" == $procName } {
+      set procName [dict get [info frame -1] proc]
+    }
+    set paramList [list]
+    set totLen 0
+    foreach valVar [info args $procName] {
+      upvar $valVar val
+      lappend paramList [set param "${valVar}=[snipTxt $val $halfLen]"]
+      incr totLen [string length $param]
+      incr totLen ;# for leading space
+    }
+    if { $totLen > 150 } {
+      set indent1 "\n   "
+      set indent2 "\n"
+    } else {
+      set indent1 " "
+      set indent2 " "
+    }
+    set ret "$procName {"
+    foreach param $paramList {
+      append ret "${indent1}$param"
+    }
+    append ret "${indent2}}"
+    return $ret
+  }
+
+
+  proc snipTxt { val {halfLen 20} {snipToken " >>SNIP<< "} } {
+    if { $halfLen > 0 } {
+      set MaxValLen [expr {[string length $snipToken] + $halfLen * 2}]
+      if { [string length $val] > $MaxValLen } {
+        set val "[string range $val 0 $halfLen]${snipToken}[string range $val end-$halfLen end]"
+      }
+    }
+    return $val
   }
 
 
